@@ -3,6 +3,7 @@ from discord.ext import commands
 
 #import economy functions
 from economy import getBalance, addBalance, COINS_PER_MESSAGE
+from games import playSlots
 
 # import token
 from config import TOKEN
@@ -99,6 +100,31 @@ async def balance(ctx):
 
     await ctx.send(f"{user.mention} has {amount} {word}.")
 
+@bot.command(
+    name="slots",
+    help="Play slots for a chance to win big!",
+    usage="!slots",
+    )
+async def slots(ctx):
+    """Sends user their current coin balance."""
+
+    user = ctx.author
+
+    if getBalance(user.id) < 2:
+        msg = (f"Unfortunately, you need 2 coins to spin! Send 2 messages!")
+    else:
+        result, prize = playSlots()
+        addBalance(user.id, prize - 2)
+
+        display = " | ".join(result)
+        if prize == 0:
+            msg = (f"{user.mention} rolled: {display}\nNot a winner...")
+        else:
+            msg = (f"{user.mention} rolled: {display}\nCongratulations! you won {prize}!!")
+
+    await ctx.send(msg)
+
+
 
 @bot.command(
     name="give",
@@ -112,10 +138,11 @@ async def give(ctx, member: discord.Member, amount: int):
     """Give an amount of coins to a specific user. Admin only."""
 
     if amount <= 0:
-        await ctx.send("invalid amount")
+        await ctx.send("Invalid Amount")
         return
     
     addBalance(member.id, amount)
+    await ctx.send("Sucess!")
 
 
 bot.run(TOKEN)
